@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  /* Primario - Azul profundo */
+  --color-primary-50: #eef4f8;
+  --color-primary-100: #d4e4ef;
+  --color-primary-200: #a9c9df;
+  --color-primary-300: #7eaecf;
+  --color-primary-400: #5393bf;
+  --color-primary-500: #1e3a5f;
+  --color-primary-600: #1a3353;
+  --color-primary-700: #162b47;
+  --color-primary-800: #12243b;
+  --color-primary-900: #0e1d2f;
+
+  /* Secundario - Verde esmeralda */
+  --color-secondary-50: #ecfdf5;
+  --color-secondary-100: #d1fae5;
+  --color-secondary-200: #a7f3d0;
+  --color-secondary-300: #6ee7b7;
+  --color-secondary-400: #34d399;
+  --color-secondary-500: #2d6a4f;
+  --color-secondary-600: #276043;
+  --color-secondary-700: #215537;
+  --color-secondary-800: #1b4b2b;
+  --color-secondary-900: #15401f;
+
+  /* Acento - Turquesa */
+  --color-accent-50: #effefb;
+  --color-accent-100: #c7fff4;
+  --color-accent-200: #90ffe9;
+  --color-accent-300: #51f7db;
+  --color-accent-400: #40c9a2;
+  --color-accent-500: #0fa68a;
+  --color-accent-600: #078571;
+  --color-accent-700: #0a6b5c;
+  --color-accent-800: #0d554b;
+  --color-accent-900: #10463f;
+
+  /* Estados del agua */
+  --color-water-optimal: #52b788;
+  --color-water-good: #74c69d;
+  --color-water-acceptable: #ffd166;
+  --color-water-warning: #f4a261;
+  --color-water-critical: #e63946;
+}
