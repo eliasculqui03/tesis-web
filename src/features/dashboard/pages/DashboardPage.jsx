@@ -161,7 +161,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Side - Donut Chart */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <div className="relative w-48 h-48">
               <svg
                 className="w-full h-full transform -rotate-90"

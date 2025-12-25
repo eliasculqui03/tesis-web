@@ -72,7 +72,7 @@ export default function AdminLayout() {
       >
         {/* Logo */}
         <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flexshrink-0">
             <svg
               className="w-6 h-6 text-white"
               fill="none"
