@@ -6,7 +6,7 @@ export default function Button({
 }) {
   return (
     <button
-      className={`w-full py-3 px-4 rounded-xl bg-accent-400 hover:bg-accent-500 text-primary-900 font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${className}`}
+      className={`w-full py-3 px-4 rounded-xl bg-white text-black font-semibold hover:bg-gray-100 transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${className}`}
       disabled={loading}
       {...props}
     >

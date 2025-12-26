@@ -76,13 +76,13 @@ export default function Input({ label, icon, type = "text", ...props }) {
   return (
     <div className="mb-4">
       {label && (
-        <label className="block text-primary-100 text-sm font-medium mb-2">
+        <label className="block text-gray-300 text-sm font-medium mb-2">
           {label}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
             {icons[icon]}
           </span>
         )}
@@ -90,14 +90,14 @@ export default function Input({ label, icon, type = "text", ...props }) {
           type={isPassword ? (show ? "text" : "password") : type}
           className={`w-full ${icon ? "pl-11" : "pl-4"} ${
             isPassword ? "pr-12" : "pr-4"
-          } py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-primary-300 focus:outline-none focus:border-accent-400 transition-all`}
+          } py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-white/40 transition-all`}
           {...props}
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-300 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
           >
             {show ? icons.eyeClosed : icons.eyeOpen}
           </button>

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
-import Button from "./Button";
-import Input from "./Input";
+import { useAuth } from "../hooks/useAuth.js";
+import Button from "./Button.jsx";
+import Input from "./Input.jsx";
 
 export default function LoginForm() {
   const { login, loading, error } = useAuth();
@@ -20,9 +20,9 @@ export default function LoginForm() {
       <h2 className="text-xl font-semibold text-white mb-6">Iniciar Sesión</h2>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-water-critical/20 border border-water-critical/30 text-water-critical text-sm flex items-center gap-2">
+        <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 text-sm flex items-center gap-2">
           <svg
-            className="w-5 h-5 flexshrink-0"
+            className="w-5 h-5 shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

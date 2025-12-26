@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "../features/auth/pages/LoginPage";
-import AdminLayout from "../components/AdminLayout";
-import DashboardPage from "../features/dashboard/pages/DashboardPage";
-import PositionsPage from "../features/config/pages/PositionsPage";
-import PrivateRoute from "./PrivateRoute";
+import LoginPage from "../features/auth/pages/LoginPage.jsx";
+import AdminLayout from "../components/AdminLayout.jsx";
+import DashboardPage from "../features/dashboard/pages/DashboardPage.jsx";
+import PositionsPage from "../features/config/pages/PositionsPage.jsx";
+import PrivateRoute from "./PrivateRoute.jsx";
 
 export default function AppRouter() {
   return (
