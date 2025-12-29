@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { userService } from "../../../api/userService.js";
 import { positionService } from "../../../api/positionService.js";
 
@@ -18,9 +18,11 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
     end_period: "",
     status: true,
   });
+  const [photoPreview, setPhotoPreview] = useState("");
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
 
   const isEdit = !!userId;
 
@@ -51,6 +53,7 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
       end_period: "",
       status: true,
     });
+    setPhotoPreview("");
     setError("");
   };
 
@@ -74,7 +77,7 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
         password: "",
         email: data.email || "",
         birthdate: data.birthdate ? data.birthdate.split("T")[0] : "",
-        photo: data.photo || "",
+        photo: "", // No pre-cargar la foto, solo mostrar preview
         phone: data.phone || "",
         address: data.address || "",
         position_id: data.position_id || "",
@@ -82,6 +85,10 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
         end_period: data.end_period ? data.end_period.split("T")[0] : "",
         status: data.status,
       });
+      // Mostrar foto actual como preview
+      if (data.photo) {
+        setPhotoPreview(data.photo);
+      }
     } catch (err) {
       setError(err || "Error al cargar usuario");
     } finally {
@@ -97,6 +104,44 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith("image/")) {
+      setError("Por favor selecciona una imagen válida");
+      return;
+    }
+
+    // Validar tamaño (máx 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError("La imagen no debe superar los 2MB");
+      return;
+    }
+
+    // Convertir a base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result;
+      setForm((prev) => ({ ...prev, photo: base64 }));
+      setPhotoPreview(base64);
+      setError("");
+    };
+    reader.onerror = () => {
+      setError("Error al leer la imagen");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setForm((prev) => ({ ...prev, photo: "" }));
+    setPhotoPreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -108,6 +153,11 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
       // Si es edición y no hay contraseña, no enviarla
       if (isEdit && !payload.password) {
         delete payload.password;
+      }
+
+      // Si es edición y no hay foto nueva, no enviarla
+      if (isEdit && !payload.photo) {
+        delete payload.photo;
       }
 
       if (isEdit) {
@@ -164,6 +214,96 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Foto */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Foto
+              </label>
+              <div className="flex items-center gap-4">
+                {/* Preview */}
+                <div className="relative">
+                  {photoPreview ? (
+                    <div className="relative">
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input */}
+                <div className="flex-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="photo-input"
+                  />
+                  <label
+                    htmlFor="photo-input"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer text-sm"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                      />
+                    </svg>
+                    Subir imagen
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPG, PNG. Máximo 2MB
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Nombre */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -334,21 +474,6 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
                 name="address"
                 value={form.address}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-              />
-            </div>
-
-            {/* Foto URL */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL Foto
-              </label>
-              <input
-                type="url"
-                name="photo"
-                value={form.photo}
-                onChange={handleChange}
-                placeholder="https://..."
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
               />
             </div>
