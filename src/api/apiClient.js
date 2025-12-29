@@ -3,6 +3,9 @@ import axios from "axios";
 const API_BASE =
   "https://decs.site.eliasculqui.com/vituya-jass/services/public/api";
 
+// Base URL para redirecciones
+const APP_BASE = import.meta.env.BASE_URL;
+
 export const clearAuthData = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
@@ -27,7 +30,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       clearAuthData();
-      window.location.href = "/login";
+      window.location.href = `${APP_BASE}login`;
     }
     return Promise.reject(error.response?.data?.message || "Error de conexión");
   }

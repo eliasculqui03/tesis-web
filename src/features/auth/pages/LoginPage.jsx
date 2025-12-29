@@ -29,7 +29,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">JASS Vituya</h1>
           <p className="text-gray-300">
-            Sistema de Control de Calidad del Agua
+            Sistema de monitoreo de Calidad del Agua
           </p>
         </div>
         <LoginForm />

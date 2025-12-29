@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUser } from "../../../api";
+import { getUser } from "../../../api/apiClient";
 import { authService } from "../../../api/authService.js";
 
 export function useAuth() {
@@ -13,7 +13,7 @@ export function useAuth() {
     setError("");
     try {
       await authService.login(document_number, password);
-      navigate("/dashboard");
+      navigate("/admin/dashboard"); // Ruta relativa, BrowserRouter maneja el base
     } catch (err) {
       setError(err || "Credenciales incorrectas");
     } finally {
@@ -23,7 +23,7 @@ export function useAuth() {
 
   const logout = async () => {
     await authService.logout();
-    navigate("/login");
+    navigate("/login"); // Ruta relativa
   };
 
   return { login, logout, loading, error, user: getUser() };
