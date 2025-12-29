@@ -3,6 +3,7 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import AdminLayout from "../components/AdminLayout";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import PositionsPage from "../features/config/pages/PositionsPage";
+import UsersPage from "../features/config/pages/UsersPage";
 import PrivateRoute from "./PrivateRoute";
 
 // Base URL desde Vite
@@ -25,10 +26,7 @@ export default function AppRouter() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="config/cargos" element={<PositionsPage />} />
-          <Route
-            path="config/usuarios"
-            element={<div className="text-gray-500">Próximamente...</div>}
-          />
+          <Route path="config/usuarios" element={<UsersPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
