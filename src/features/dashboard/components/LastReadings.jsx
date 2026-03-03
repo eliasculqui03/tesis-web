@@ -11,7 +11,6 @@ export default function LastReadings() {
   const [isConnected, setIsConnected] = useState(false);
   const [hasNewReading, setHasNewReading] = useState(false);
 
-  // Cargar datos
   const loadData = async () => {
     try {
       const response = await measurementService.getLastReadings();
@@ -23,106 +22,62 @@ export default function LastReadings() {
     }
   };
 
-  // Cargar al iniciar
   useEffect(() => {
     loadData();
   }, []);
 
-  // Pusher - Solo en este componente
   useEffect(() => {
     const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
-
-    pusher.connection.bind("connected", () => {
-      console.log("✅ LastReadings: Conectado a Pusher");
-      setIsConnected(true);
-    });
-
-    pusher.connection.bind("disconnected", () => {
-      console.log("❌ LastReadings: Desconectado");
-      setIsConnected(false);
-    });
-
+    pusher.connection.bind("connected", () => setIsConnected(true));
+    pusher.connection.bind("disconnected", () => setIsConnected(false));
     const channel = pusher.subscribe("water-quality");
-
     channel.bind("new-reading", (data) => {
-      console.log("📡 LastReadings: Nueva lectura", data);
       setHasNewReading(true);
       loadData();
-
-      // Quitar indicador después de 3 segundos
       setTimeout(() => setHasNewReading(false), 3000);
     });
-
     return () => {
       channel.unbind_all();
       pusher.disconnect();
     };
   }, []);
 
-  const isOptimal = (ph, ec) => {
-    return ph >= 6.5 && ph <= 8.5 && ec >= 200 && ec <= 800;
-  };
+  const isOptimal = (ph, ec) => ph >= 6.5 && ph <= 8.5 && ec >= 200 && ec <= 800;
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-4 h-full">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-14 bg-gray-100 rounded mb-2"></div>
-          ))}
-        </div>
+      <div className="bg-white rounded-xl border border-gray-100 p-5 h-full animate-pulse">
+        <div className="h-5 bg-gray-100 rounded-lg w-1/2 mb-6"></div>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-14 bg-gray-50 rounded-xl mb-3"></div>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full flex flex-col">
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden h-full flex flex-col shadow-sm">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-gray-900">Últimas Lecturas</h2>
+          <h2 className="font-jakarta text-sm font-bold text-navy uppercase tracking-tight">Últimas Lecturas</h2>
           {hasNewReading && (
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
+            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-gray-300"}`}
-          />
-          <button
-            onClick={loadData}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            title="Actualizar"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
-        </div>
+        <button onClick={loadData} className="p-1.5 text-gray-400 hover:text-navy transition-all">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
       </div>
 
-      {/* Lista */}
-      {readings.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-gray-400 p-8">
-          Sin lecturas disponibles
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-          {readings.map((reading, index) => {
+      {/* List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-hide">
+        {readings.length === 0 ? (
+          <div className="text-center py-10 text-[11px] font-bold text-gray-300 uppercase">Sin lecturas</div>
+        ) : (
+          readings.map((reading, index) => {
             const ph = parseFloat(reading.value_ph);
             const ec = parseFloat(reading.value_ec);
             const optimal = isOptimal(ph, ec);
@@ -131,63 +86,37 @@ export default function LastReadings() {
             return (
               <div
                 key={reading.id}
-                className={`px-4 py-3 transition-colors ${
-                  isFirst && hasNewReading
-                    ? "bg-emerald-50"
-                    : "hover:bg-gray-50"
+                className={`p-3 rounded-lg border transition-all duration-300 ${
+                  isFirst && hasNewReading 
+                    ? "bg-emerald-50 border-emerald-100 shadow-sm" 
+                    : "bg-white border-gray-50 hover:border-gold/20"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-2 h-2 rounded-full ${optimal ? "bg-emerald-500" : "bg-red-500"}`}
-                    />
-                    <span className="text-sm text-gray-600">
-                      {reading.datetime}
-                    </span>
-                  </div>
-                  {isFirst && hasNewReading && (
-                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                      Nueva
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`text-sm font-medium ${
-                        ph >= 6.5 && ph <= 8.5
-                          ? "text-blue-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      pH: {ph.toFixed(2)}
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${
-                        ec >= 200 && ec <= 800
-                          ? "text-amber-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      EC: {ec.toFixed(0)} µS
-                    </span>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      optimal
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {optimal ? "Óptimo" : "Alerta"}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{reading.datetime}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${optimal ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {optimal ? 'Óptimo' : 'Alerta'}
                   </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">pH</span>
+                    <span className={`text-sm font-black font-jakarta ${ph >= 6.5 && ph <= 8.5 ? 'text-blue-600' : 'text-red-600'}`}>
+                      {ph.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col border-l border-gray-100 pl-4">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">EC</span>
+                    <span className={`text-sm font-black font-jakarta ${ec >= 200 && ec <= 800 ? 'text-gold' : 'text-red-600'}`}>
+                      {ec.toFixed(0)} <span className="text-[10px] uppercase font-bold">µS</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 }

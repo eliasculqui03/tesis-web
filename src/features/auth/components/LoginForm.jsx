@@ -1,68 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth.js";
+import { useConfirm } from "../../../hooks/useConfirm.js";
+import ConfirmDialog from "../../../components/ConfirmDialog.jsx";
 import Button from "./Button.jsx";
-import Input from "./Input.jsx";
 
 export default function LoginForm() {
   const { login, loading, error } = useAuth();
+  const dialog = useConfirm();
   const [form, setForm] = useState({ document_number: "", password: "" });
+
+  useEffect(() => {
+    if (error) {
+      dialog.error("Error de Acceso", error);
+    }
+  }, [error]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     login(form.document_number, form.password);
   };
 
+  const inputClasses = "w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 outline-none focus:outline-none focus:bg-white/20 transition-all duration-200 font-semibold text-sm";
+  const labelClasses = "block text-white text-[11px] font-bold uppercase tracking-widest ml-1 mb-1.5";
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20"
-    >
-      <h2 className="text-xl font-semibold text-white mb-6">Iniciar Sesión</h2>
+    <form onSubmit={handleSubmit} className="space-y-6 font-dm">
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1 font-jakarta">¡Bienvenido!</h2>
+        <p className="text-sm text-white/50 mb-6 font-medium">Accede al panel administrativo</p>
+      </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 text-sm flex items-center gap-2">
-          <svg
-            className="w-5 h-5 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          {error}
+      <div className="space-y-4">
+        <div>
+          <label className={labelClasses}>Número de Documento</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={form.document_number}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              setForm({ ...form, document_number: val });
+            }}
+            placeholder="Ingresa tu número de documento"
+            maxLength={8}
+            className={inputClasses}
+            required
+          />
         </div>
-      )}
 
-      <Input
-        label="Número de Documento"
-        name="document_number"
-        value={form.document_number}
-        onChange={(e) => setForm({ ...form, document_number: e.target.value })}
-        placeholder="Ingresa tu DNI"
-        maxLength={8}
-        icon="user"
-        required
+        <div>
+          <label className={labelClasses}>Contraseña</label>
+          <input
+            type="password"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            placeholder="Ingresa tu contraseña"
+            className={inputClasses}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="pt-2">
+        <Button type="submit" loading={loading}>
+          Iniciar Sesión
+        </Button>
+      </div>
+
+      <ConfirmDialog
+        isOpen={dialog.isOpen}
+        onClose={dialog.close}
+        onConfirm={dialog.onConfirm}
+        type={dialog.type}
+        title={dialog.title}
+        message={dialog.message}
+        confirmText={dialog.confirmText}
+        showCancel={dialog.showCancel}
       />
-
-      <Input
-        label="Contraseña"
-        name="password"
-        type="password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-        placeholder="Ingresa tu contraseña"
-        icon="lock"
-        required
-      />
-
-      <Button type="submit" loading={loading}>
-        Ingresar
-      </Button>
     </form>
   );
 }

@@ -1,432 +1,189 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/hooks/useAuth.js";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 
 const menuItems = [
-  { label: "Dashboard", path: "/admin/dashboard" },
+  { 
+    label: "Principal", 
+    items: [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "dashboard" }
+    ]
+  },
   {
     label: "Configuración",
-    children: [
-      { label: "Usuarios", path: "/admin/config/usuarios" },
-      { label: "Cargos", path: "/admin/config/cargos" },
+    items: [
+      { label: "Usuarios", path: "/admin/config/usuarios", icon: "users" },
+      { label: "Cargos", path: "/admin/config/cargos", icon: "briefcase" },
     ],
   },
 ];
 
+const icons = {
+  dashboard: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+    </svg>
+  ),
+  users: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  ),
+  briefcase: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ),
+  logout: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  )
+};
+
 export default function AdminLayout() {
   const { logout, user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState("");
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const isActive = (path) => location.pathname === path;
-  const isParentActive = (children) =>
-    children?.some((child) => location.pathname === child.path);
 
-  // Cerrar menú de usuario al hacer click fuera
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleEditProfile = () => {
-    setUserMenuOpen(false);
-    navigate("/admin/perfil");
-  };
-
-  const handleChangePassword = () => {
-    setUserMenuOpen(false);
-    navigate("/admin/perfil/password");
-  };
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleLogout = async () => {
-    setUserMenuOpen(false);
     await logout();
   };
 
-  // Obtener iniciales del nombre
   const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
+    if (!name) return "AD";
+    return name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-black flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3"
-                  />
-                </svg>
-              </div>
-              <div className="hidden sm:block">
-                <span className="font-bold text-gray-900">JASS Vituya</span>
-                <p className="text-xs text-gray-500">Control de Agua</p>
-              </div>
-            </div>
+    <div className="flex min-h-screen bg-gray-50 text-navy font-dm">
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          onClick={toggleSidebar}
+          className="fixed inset-0 bg-navy-deep/60 z-40 lg:hidden backdrop-blur-sm transition-all"
+        />
+      )}
 
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center gap-1">
-              {menuItems.map((item) => (
-                <div key={item.label} className="relative">
-                  {item.path ? (
-                    <Link
-                      to={item.path}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isActive(item.path)
-                          ? "bg-black text-white"
-                          : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setOpenDropdown(
-                            openDropdown === item.label ? "" : item.label
-                          )
-                        }
-                        className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          isParentActive(item.children)
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {item.label}
-                        <svg
-                          className={`w-4 h-4 transition-transform ${
-                            openDropdown === item.label ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-                      {openDropdown === item.label && (
-                        <>
-                          <div
-                            className="fixed inset-0"
-                            onClick={() => setOpenDropdown("")}
-                          />
-                          <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                            {item.children.map((child) => (
-                              <Link
-                                key={child.path}
-                                to={child.path}
-                                onClick={() => setOpenDropdown("")}
-                                className={`block px-4 py-2 text-sm transition-colors ${
-                                  isActive(child.path)
-                                    ? "bg-gray-100 text-gray-900"
-                                    : "text-gray-600 hover:bg-gray-50"
-                                }`}
-                              >
-                                {child.label}
-                              </Link>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+      {/* Sidebar */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-navy-deep transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl`}
+      >
+        {/* Logo */}
+        <div className="flex items-center justify-between h-20 px-6 border-b border-white/10">
+          <Link to="/admin/dashboard" className="font-jakarta text-2xl font-extrabold text-white tracking-tight">
+            JASS<span className="text-gold"> Vituya</span>
+          </Link>
+          <button onClick={toggleSidebar} className="lg:hidden text-white/60 hover:text-white p-1">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-            {/* User Menu & Mobile Toggle */}
-            <div className="flex items-center gap-3">
-              {/* User Dropdown */}
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="hidden sm:block text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user?.name}
-                    </p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                  </div>
-                  {user?.photo ? (
-                    <img
-                      src={user.photo}
-                      alt={user.name}
-                      className="w-9 h-9 rounded-full object-cover border-2 border-gray-200"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white font-semibold text-sm">
-                      {getInitials(user?.name)}
-                    </div>
-                  )}
-                  <svg
-                    className={`w-4 h-4 text-gray-400 hidden sm:block transition-transform ${
-                      userMenuOpen ? "rotate-180" : ""
+        {/* User Badge */}
+        <div className="px-5 py-6">
+          <div className="flex items-center gap-4 px-4 py-3 bg-white/5 rounded-xl border border-white/5 shadow-inner">
+            <div className="w-11 h-11 bg-gold/20 rounded-lg flex items-center justify-center border border-gold/30">
+               {user?.photo ? (
+                 <img src={user.photo} alt={user.name} className="w-full h-full rounded-lg object-cover" />
+               ) : (
+                 <span className="text-gold font-bold text-sm font-jakarta">{getInitials(user?.name)}</span>
+               )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-white truncate font-jakarta">{user?.name || 'Administrador'}</div>
+              <div className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-black">Panel de Control</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-2 space-y-8 overflow-y-auto scrollbar-hide">
+          {menuItems.map((group) => (
+            <div key={group.label} className="space-y-2">
+              <div className="px-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{group.label}</div>
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-4 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${
+                      isActive(item.path)
+                        ? "bg-gold/15 text-gold border-l-4 border-gold translate-x-1 shadow-[0_0_20px_-5px_rgba(197,165,90,0.2)]"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
                     }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Dropdown Menu */}
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
-                    {/* User Info */}
-                    <div className="p-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3">
-                        {user?.photo ? (
-                          <img
-                            src={user.photo}
-                            alt={user.name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white font-semibold">
-                            {getInitials(user?.name)}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">
-                            {user?.name}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            {user?.email}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Menu Items */}
-                    <div className="py-1">
-                      <button
-                        onClick={handleEditProfile}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                          />
-                        </svg>
-                        Editar perfil
-                      </button>
-                      <button
-                        onClick={handleChangePassword}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
-                          />
-                        </svg>
-                        Cambiar contraseña
-                      </button>
-                    </div>
-
-                    {/* Logout */}
-                    <div className="border-t border-gray-100 py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
-                          />
-                        </svg>
-                        Cerrar sesión
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    <span className={`${isActive(item.path) ? "text-gold" : "text-white/20"}`}>
+                      {icons[item.icon]}
+                    </span>
+                    {item.label}
+                  </Link>
+                ))}
               </div>
-
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-              >
-                {mobileMenuOpen ? (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  </svg>
-                )}
-              </button>
             </div>
-          </div>
+          ))}
+        </nav>
+
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-white/10 space-y-2">
+           <Link 
+            to="/admin/perfil"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Mi Perfil
+          </Link>
+          <button 
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-400/60 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+          >
+            {icons.logout}
+            Cerrar Sesión
+          </button>
         </div>
+      </aside>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
-            <div className="px-4 py-3 space-y-1">
-              {menuItems.map((item) => (
-                <div key={item.label}>
-                  {item.path ? (
-                    <Link
-                      to={item.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`block px-3 py-2 rounded-lg text-sm font-medium ${
-                        isActive(item.path)
-                          ? "bg-black text-white"
-                          : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() =>
-                          setOpenDropdown(
-                            openDropdown === item.label ? "" : item.label
-                          )
-                        }
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium ${
-                          isParentActive(item.children)
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        {item.label}
-                        <svg
-                          className={`w-4 h-4 transition-transform ${
-                            openDropdown === item.label ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-                      {openDropdown === item.label && (
-                        <div className="ml-4 mt-1 space-y-1">
-                          {item.children.map((child) => (
-                            <Link
-                              key={child.path}
-                              to={child.path}
-                              onClick={() => setMobileMenuOpen(false)}
-                              className={`block px-3 py-2 rounded-lg text-sm ${
-                                isActive(child.path)
-                                  ? "bg-black text-white"
-                                  : "text-gray-500 hover:bg-gray-100"
-                              }`}
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-72 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+          <button onClick={toggleSidebar} className="p-2 text-navy hover:bg-gray-50 rounded-lg transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="font-jakarta text-lg font-bold text-navy">JASS Vituya</span>
+          <div className="w-9 h-9 bg-navy-deep rounded-lg flex items-center justify-center border border-white/10 shadow-lg shadow-navy/20">
+            <span className="text-xs font-black text-white">{getInitials(user?.name)}</span>
           </div>
-        )}
-      </nav>
+        </header>
 
-      {/* Content */}
-      <main className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Page Content */}
+        <main className="p-4 sm:p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
+
+      {/* Logout Confirmation */}
+      <ConfirmDialog 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        title="¿Cerrar Sesión?"
+        message="¿Estás seguro de que deseas salir del sistema de gestión JASS Vituya?"
+        confirmText="Sí, salir"
+        cancelText="Permanecer"
+        type="confirm"
+      />
     </div>
   );
 }

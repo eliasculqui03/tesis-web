@@ -1,20 +1,11 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 const types = {
   success: {
     icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 13l4 4L19 7"
-        />
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
       </svg>
     ),
     color: "bg-emerald-500",
@@ -23,18 +14,8 @@ const types = {
   },
   error: {
     icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
       </svg>
     ),
     color: "bg-red-500",
@@ -43,79 +24,39 @@ const types = {
   },
   warning: {
     icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
     ),
     color: "bg-amber-500",
     lightBg: "bg-amber-50",
     text: "text-amber-600",
   },
-  info: {
-    icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-    color: "bg-blue-500",
-    lightBg: "bg-blue-50",
-    text: "text-blue-600",
-  },
   confirm: {
     icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
       </svg>
     ),
-    color: "bg-gray-900",
-    lightBg: "bg-gray-50",
-    text: "text-gray-900",
-  },
+    color: "bg-navy",
+    lightBg: "bg-navy/5",
+    text: "text-navy",
+  }
 };
 
 export default function ConfirmDialog({
   isOpen,
   onClose,
   onConfirm,
-  type = "info",
+  type = "confirm",
   title,
   message,
-  confirmText = "Aceptar",
+  confirmText = "Confirmar",
   cancelText = "Cancelar",
   showCancel = true,
   autoClose = 0,
 }) {
-  const config = types[type] || types.info;
+  const config = types[type] || types.confirm;
 
   useEffect(() => {
     if (isOpen && autoClose > 0) {
@@ -124,42 +65,36 @@ export default function ConfirmDialog({
     }
   }, [isOpen, autoClose, onClose]);
 
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (isOpen) document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-navy-deep/60 backdrop-blur-[2px] animate-in fade-in duration-200" onClick={onClose} />
 
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-        {/* Icon */}
-        <div
-          className={`w-14 h-14 mx-auto mb-4 rounded-full ${config.lightBg} ${config.text} flex items-center justify-center`}
-        >
-          {config.icon}
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
+        <div className="p-6 text-center">
+          {/* Icon */}
+          <div className={`w-16 h-16 mx-auto mb-4 rounded-xl ${config.lightBg} ${config.text} flex items-center justify-center shadow-inner`}>
+            {config.icon}
+          </div>
+
+          {/* Title */}
+          {title && (
+            <h3 className="font-jakarta text-lg font-bold text-navy mb-2 leading-tight">{title}</h3>
+          )}
+
+          {/* Message */}
+          {message && (
+            <p className="text-gray-500 text-sm font-medium leading-relaxed">{message}</p>
+          )}
         </div>
 
-        {/* Title */}
-        {title && (
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        )}
-
-        {/* Message */}
-        {message && <p className="text-gray-500 text-sm mb-6">{message}</p>}
-
-        {/* Buttons */}
-        <div className={`flex gap-3 ${showCancel ? "" : "justify-center"}`}>
+        {/* Actions */}
+        <div className="flex gap-3 p-6 pt-0">
           {showCancel && (
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-navy font-bold text-xs hover:bg-gray-100 transition-all uppercase tracking-widest outline-none"
             >
               {cancelText}
             </button>
@@ -169,14 +104,13 @@ export default function ConfirmDialog({
               onConfirm?.();
               onClose();
             }}
-            className={`${showCancel ? "flex-1" : "px-8"} py-2.5 rounded-lg ${
-              config.color
-            } text-white font-medium hover:opacity-90 transition-colors`}
+            className={`flex-1 px-4 py-2.5 rounded-xl ${config.color} text-white font-bold text-xs hover:opacity-90 transition-all shadow-lg uppercase tracking-widest outline-none`}
           >
             {confirmText}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

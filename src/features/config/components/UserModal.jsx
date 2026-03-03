@@ -77,7 +77,7 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
         password: "",
         email: data.email || "",
         birthdate: data.birthdate ? data.birthdate.split("T")[0] : "",
-        photo: "", // No pre-cargar la foto, solo mostrar preview
+        photo: "", 
         phone: data.phone || "",
         address: data.address || "",
         position_id: data.position_id || "",
@@ -85,10 +85,7 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
         end_period: data.end_period ? data.end_period.split("T")[0] : "",
         status: data.status,
       });
-      // Mostrar foto actual como preview
-      if (data.photo) {
-        setPhotoPreview(data.photo);
-      }
+      if (data.photo) setPhotoPreview(data.photo);
     } catch (err) {
       setError(err || "Error al cargar usuario");
     } finally {
@@ -107,58 +104,22 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Validar tipo de archivo
-    if (!file.type.startsWith("image/")) {
-      setError("Por favor selecciona una imagen válida");
-      return;
-    }
-
-    // Validar tamaño (máx 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setError("La imagen no debe superar los 2MB");
-      return;
-    }
-
-    // Convertir a base64
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64 = reader.result;
-      setForm((prev) => ({ ...prev, photo: base64 }));
-      setPhotoPreview(base64);
-      setError("");
-    };
-    reader.onerror = () => {
-      setError("Error al leer la imagen");
+      setForm((prev) => ({ ...prev, photo: reader.result }));
+      setPhotoPreview(reader.result);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleRemovePhoto = () => {
-    setForm((prev) => ({ ...prev, photo: "" }));
-    setPhotoPreview("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       const payload = { ...form, position_id: parseInt(form.position_id) };
-
-      // Si es edición y no hay contraseña, no enviarla
-      if (isEdit && !payload.password) {
-        delete payload.password;
-      }
-
-      // Si es edición y no hay foto nueva, no enviarla
-      if (isEdit && !payload.photo) {
-        delete payload.photo;
-      }
+      if (isEdit && !payload.password) delete payload.password;
+      if (isEdit && !payload.photo) delete payload.photo;
 
       if (isEdit) {
         await userService.update({ id: userId, ...payload });
@@ -177,339 +138,116 @@ export default function UserModal({ isOpen, onClose, onSuccess, userId }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 font-dm">
+      <div className="absolute inset-0 bg-navy-deep/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
+        
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+          <h2 className="font-jakarta text-lg font-bold text-navy">
             {isEdit ? "Editar Usuario" : "Nuevo Usuario"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-navy hover:bg-white rounded-lg transition-all outline-none">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-130px)]">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
+            <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-bold flex items-center gap-3">
+               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Foto */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Foto
-              </label>
-              <div className="flex items-center gap-4">
-                {/* Preview */}
+          <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex items-center gap-6 p-5 bg-gray-50 rounded-xl border border-gray-200/50">
                 <div className="relative">
-                  {photoPreview ? (
-                    <div className="relative">
-                      <img
-                        src={photoPreview}
-                        alt="Preview"
-                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRemovePhoto}
-                        className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
+                  <div className="w-24 h-24 rounded-2xl bg-white border-2 border-white shadow-lg overflow-hidden transition-all ring-1 ring-gray-100">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                         </svg>
-                      </button>
-                    </div>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="photo-input" />
+                  <label htmlFor="photo-input" className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold text-white rounded-xl flex items-center justify-center shadow-xl cursor-pointer hover:bg-gold-light transition-all border-4 border-white active:scale-90">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </label>
+                </div>
+                <div>
+                  <p className="font-bold text-navy text-sm font-jakarta">Fotografía</p>
+                  <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-0.5">JPEG o PNG, max 2MB</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {[
+                { label: 'Nombre Completo', name: 'name', type: 'text', required: true, colSpan: 'sm:col-span-2' },
+                { label: 'Tipo Doc.', name: 'document_type', type: 'select', options: ['DNI', 'CE', 'RUC'] },
+                { label: 'Número Doc.', name: 'document_number', type: 'text', required: true },
+                { label: 'Correo Electrónico', name: 'email', type: 'email', required: true },
+                { label: 'Teléfono', name: 'phone', type: 'tel', maxLength: 9 },
+                { label: 'Cargo en Sistema', name: 'position_id', type: 'select', isPositions: true, required: true },
+                { label: isEdit ? 'Nueva Contraseña (Opcional)' : 'Contraseña', name: 'password', type: 'password', required: !isEdit }
+              ].map((field) => (
+                <div key={field.name} className={`space-y-1.5 ${field.colSpan || ''}`}>
+                  <label className="text-[10px] font-black text-navy/50 uppercase tracking-widest ml-1">{field.label}</label>
+                  {field.type === 'select' ? (
+                    <select
+                      name={field.name}
+                      value={form[field.name]}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-navy outline-none focus:outline-none focus:border-gold focus:bg-white transition-all text-sm font-bold cursor-pointer shadow-sm"
+                      required={field.required}
+                    >
+                      {field.isPositions ? (
+                        <>
+                          <option value="">Seleccionar...</option>
+                          {positions.map((pos) => <option key={pos.id} value={pos.id}>{pos.name_position}</option>)}
+                        </>
+                      ) : (
+                        field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)
+                      )}
+                    </select>
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-                      <svg
-                        className="w-8 h-8 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                        />
-                      </svg>
-                    </div>
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      value={form[field.name]}
+                      onChange={handleChange}
+                      maxLength={field.maxLength}
+                      placeholder={field.type === 'password' ? '••••••••' : ''}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-navy outline-none focus:outline-none focus:border-gold focus:bg-white transition-all text-sm font-bold shadow-sm"
+                      required={field.required}
+                    />
                   )}
                 </div>
-
-                {/* Input */}
-                <div className="flex-1">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="photo-input"
-                  />
-                  <label
-                    htmlFor="photo-input"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer text-sm"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                      />
-                    </svg>
-                    Subir imagen
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1">
-                    JPG, PNG. Máximo 2MB
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Nombre */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre completo *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                required
-              />
-            </div>
-
-            {/* Documento */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo Doc. *
-                </label>
-                <select
-                  name="document_type"
-                  value={form.document_type}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                  required
-                >
-                  <option value="DNI">DNI</option>
-                  <option value="CE">CE</option>
-                  <option value="RUC">RUC</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Número Doc. *
-                </label>
-                <input
-                  type="text"
-                  name="document_number"
-                  value={form.document_number}
-                  onChange={handleChange}
-                  maxLength={form.document_type === "DNI" ? 8 : 12}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Email y Teléfono */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  maxLength={9}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Contraseña */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {isEdit
-                  ? "Nueva Contraseña (dejar vacío para no cambiar)"
-                  : "Contraseña *"}
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                required={!isEdit}
-                minLength={6}
-              />
-            </div>
-
-            {/* Fecha nacimiento y Cargo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Nacimiento
-                </label>
-                <input
-                  type="date"
-                  name="birthdate"
-                  value={form.birthdate}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cargo *
-                </label>
-                <select
-                  name="position_id"
-                  value={form.position_id}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                  required
-                >
-                  <option value="">Seleccionar...</option>
-                  {positions.map((pos) => (
-                    <option key={pos.id} value={pos.id}>
-                      {pos.name_position}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Período */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Inicio Período
-                </label>
-                <input
-                  type="date"
-                  name="start_period"
-                  value={form.start_period}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fin Período
-                </label>
-                <input
-                  type="date"
-                  name="end_period"
-                  value={form.end_period}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Dirección */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dirección
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-              />
-            </div>
-
-            {/* Estado */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="status"
-                name="status"
-                checked={form.status}
-                onChange={handleChange}
-                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-              />
-              <label htmlFor="status" className="text-sm text-gray-700">
-                Usuario activo
-              </label>
+            <div className="flex items-center gap-2 px-1 pt-2">
+              <input type="checkbox" id="status" name="status" checked={form.status} onChange={handleChange} className="w-4 h-4 rounded border-gray-300 text-gold outline-none focus:ring-0 cursor-pointer" />
+              <label htmlFor="status" className="text-xs font-bold text-navy/60 select-none cursor-pointer">Habilitar acceso inmediato al sistema</label>
             </div>
           </form>
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-3 p-4 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
-          >
+        <div className="px-6 py-4 border-t border-gray-100 bg-white flex gap-3 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-3 rounded-xl bg-white border border-gray-200 text-navy font-bold text-xs hover:bg-gray-50 transition-all uppercase tracking-widest outline-none">
             Cancelar
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-black text-white font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 text-sm"
-          >
-            {loading ? "Guardando..." : "Guardar"}
+          <button form="user-form" type="submit" disabled={loading} className="flex-1 px-4 py-3 rounded-xl bg-navy text-white font-bold text-xs hover:bg-navy-light transition-all shadow-lg shadow-navy/10 disabled:opacity-50 uppercase tracking-widest outline-none">
+            {loading ? "Guardando..." : "Guardar Registro"}
           </button>
         </div>
       </div>

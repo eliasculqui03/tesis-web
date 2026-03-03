@@ -26,12 +26,21 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const { data } = response;
+    // Si la API devuelve un campo status diferente de 200, lo tratamos como error
+    if (data && typeof data.status !== "undefined" && data.status !== 200) {
+      return Promise.reject(data.message || "Error del servidor");
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       clearAuthData();
       window.location.href = `${APP_BASE}login`;
     }
-    return Promise.reject(error.response?.data?.message || "Error de conexión");
+    return Promise.reject(
+      error.response?.data?.message || error.message || "Error de conexión"
+    );
   }
 );

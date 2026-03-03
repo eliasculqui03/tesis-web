@@ -52,17 +52,12 @@ export default function ProfilePage() {
         phone: profile.phone || "",
         address: profile.address || "",
         position_id: profile.position_id || "",
-        start_period: profile.start_period
-          ? profile.start_period.split("T")[0]
-          : "",
+        start_period: profile.start_period ? profile.start_period.split("T")[0] : "",
         end_period: profile.end_period ? profile.end_period.split("T")[0] : "",
         status: profile.status,
       });
 
-      if (profile.photo) {
-        setPhotoPreview(profile.photo);
-      }
-
+      if (profile.photo) setPhotoPreview(profile.photo);
       setPositions(positionsRes.data || []);
     } catch (err) {
       setError(err || "Error al cargar perfil");
@@ -82,56 +77,24 @@ export default function ProfilePage() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setError("Por favor selecciona una imagen válida");
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      setError("La imagen no debe superar los 2MB");
-      return;
-    }
-
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64 = reader.result;
-      setForm((prev) => ({ ...prev, photo: base64 }));
-      setPhotoPreview(base64);
-      setError("");
+      setForm((prev) => ({ ...prev, photo: reader.result }));
+      setPhotoPreview(reader.result);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleRemovePhoto = () => {
-    setForm((prev) => ({ ...prev, photo: "" }));
-    setPhotoPreview("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError("");
-
     try {
       const payload = { ...form, position_id: parseInt(form.position_id) };
-
-      // Si no hay foto nueva, no enviarla
-      if (!payload.photo) {
-        delete payload.photo;
-      }
-
+      if (!payload.photo) delete payload.photo;
       await profileService.updateProfile(payload);
-      dialog.success(
-        "¡Perfil actualizado!",
-        "Tus datos se guardaron correctamente."
-      );
-
-      // Recargar para reflejar cambios en el header
-      window.location.reload();
+      dialog.success("¡Perfil actualizado!", "Tus datos se guardaron correctamente.");
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       setError(err || "Error al guardar");
     } finally {
@@ -144,247 +107,74 @@ export default function ProfilePage() {
     return position?.name_position || "-";
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500">Cargando...</div>
-      </div>
-    );
-  }
+  const inputStyles = "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-navy outline-none focus:outline-none focus:border-gold focus:bg-white transition-all text-sm font-bold shadow-sm";
+
+  if (loading) return <div className="flex items-center justify-center py-20 animate-pulse font-black text-gray-300 text-xs uppercase tracking-widest">Cargando Perfil...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-          Mi Perfil
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Actualiza tu información personal
-        </p>
+    <div className="max-w-4xl mx-auto space-y-6 font-dm">
+      <div>
+        <h1 className="font-jakarta text-2xl font-bold text-navy tracking-tight">Mi Perfil</h1>
+        <p className="text-gray-500 text-sm font-medium tracking-tight">Actualiza tus datos personales</p>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-      >
-        {/* Foto */}
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {photoPreview ? (
-                <div className="relative">
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl font-semibold">
-                  {form.name?.charAt(0) || "U"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                id="photo-input"
-              />
-              <label
-                htmlFor="photo-input"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer text-sm"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                  />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col items-center text-center">
+            <div className="relative mb-6">
+              <div className="w-28 h-28 rounded-2xl bg-navy-deep border-4 border-white shadow-xl overflow-hidden transition-all ring-1 ring-gray-100">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold">
+                    {form.name?.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="profile-photo" />
+              <label htmlFor="profile-photo" className="absolute -bottom-1 -right-1 w-9 h-9 bg-gold text-white rounded-lg flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-gold-light transition-all">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                Cambiar foto
               </label>
-              <p className="text-xs text-gray-500 mt-1">JPG, PNG. Máximo 2MB</p>
             </div>
+            <h2 className="font-jakarta text-lg font-bold text-navy leading-tight">{form.name}</h2>
+            <p className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mt-1">{getPositionName()}</p>
           </div>
         </div>
 
-        {/* Info de solo lectura */}
-        <div className="p-6 bg-gray-50 border-b border-gray-100">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-500">Documento</p>
-              <p className="font-medium text-gray-900">
-                {form.document_type}: {form.document_number}
-              </p>
+        <div className="lg:col-span-2">
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-[10px] font-black text-navy/50 uppercase tracking-widest ml-1">Nombre Completo</label>
+                <input type="text" name="name" value={form.name} onChange={handleChange} className={inputStyles} required />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-navy/50 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                <input type="email" name="email" value={form.email} onChange={handleChange} className={inputStyles} required />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-navy/50 uppercase tracking-widest ml-1">Teléfono Movil</label>
+                <input type="tel" name="phone" value={form.phone} onChange={handleChange} maxLength={9} className={inputStyles} />
+              </div>
             </div>
-            <div>
-              <p className="text-gray-500">Cargo</p>
-              <p className="font-medium text-gray-900">{getPositionName()}</p>
+
+            <div className="pt-6 border-t border-gray-100 flex gap-3">
+              <button type="button" onClick={() => navigate(-1)} className="flex-1 px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-navy font-bold text-xs hover:bg-gray-50 transition-all uppercase tracking-widest outline-none">
+                Regresar
+              </button>
+              <button type="submit" disabled={saving} className="flex-1 px-6 py-2.5 rounded-xl bg-navy text-white font-bold text-xs hover:bg-navy-light transition-all shadow-lg shadow-navy/10 disabled:opacity-50 uppercase tracking-widest outline-none">
+                {saving ? "Procesando..." : "Actualizar"}
+              </button>
             </div>
-            <div>
-              <p className="text-gray-500">Período</p>
-              <p className="font-medium text-gray-900">
-                {form.start_period || "-"} al {form.end_period || "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-500">Estado</p>
-              <span
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
-                  form.status
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-gray-200 text-gray-600"
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    form.status ? "bg-emerald-500" : "bg-gray-400"
-                  }`}
-                />
-                {form.status ? "Activo" : "Inactivo"}
-              </span>
-            </div>
-          </div>
+          </form>
         </div>
+      </div>
 
-        {/* Campos editables */}
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre completo
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                maxLength={9}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha de nacimiento
-            </label>
-            <input
-              type="date"
-              name="birthdate"
-              value={form.birthdate}
-              onChange={handleChange}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dirección
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex gap-3 p-6 border-t border-gray-100 bg-gray-50">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-white transition-colors text-sm font-medium"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-black text-white font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 text-sm"
-          >
-            {saving ? "Guardando..." : "Guardar cambios"}
-          </button>
-        </div>
-      </form>
-
-      <ConfirmDialog
-        isOpen={dialog.isOpen}
-        onClose={dialog.close}
-        onConfirm={dialog.onConfirm}
-        type={dialog.type}
-        title={dialog.title}
-        message={dialog.message}
-        confirmText={dialog.confirmText}
-        showCancel={dialog.showCancel}
-      />
+      <ConfirmDialog isOpen={dialog.isOpen} onClose={dialog.close} onConfirm={dialog.onConfirm} type={dialog.type} title={dialog.title} message={dialog.message} confirmText={dialog.confirmText} showCancel={dialog.showCancel} />
     </div>
   );
 }
